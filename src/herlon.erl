@@ -3,11 +3,16 @@
 -compile({parse_transform, nakaz_pt}).
 -include_lib("nakaz/include/nakaz.hrl").
 
+-ifdef(TEST).
+-include_lib("eunit/include/eunit.hrl").
+-endif.
+
 -include("herlon.hrl").
 
 %% API
 -export([start/0,
-         get_secret_qr/1, get_secret_qr/2, get_secret_qr/4,
+         get_secret_qr/0, get_secret_qr/1,
+         get_secret_qr/2, get_secret_qr/4,
          check_code/2,
          add_user/1, check_user/2]).
 
@@ -36,16 +41,23 @@ start() ->
 
 %% if secret is stored on external server
 
--spec get_secret_qr(binary()) -> binary().
+-spec get_secret_qr() -> {ok, {binary(), binary()}}.
+get_secret_qr() ->
+    herlon_internal:get_secret_qr().
+
+-spec get_secret_qr(binary()) -> {ok, {binary(),
+                                       binary()}}.
 get_secret_qr(Secret) ->
     herlon_internal:get_secret_qr(Secret).
 
--spec get_secret_qr(binary(), binary()) -> binary().
+-spec get_secret_qr(binary(), binary()) -> {ok, {binary(),
+                                                 binary()}}.
 get_secret_qr(Secret, Label) ->
     herlon_internal:get_secret_qr(Secret, Label).
 
 -spec get_secret_qr(binary(), binary(),
-                    pos_integer(), pos_integer()) -> binary().
+                    pos_integer(), pos_integer()) -> {ok, {binary(),
+                                                            binary()}}.
 get_secret_qr(Secret, Label, TileSize, Margin) ->
     herlon_internal:get_secret_qr(Secret, Label, TileSize, Margin).
 
@@ -65,3 +77,9 @@ check_user(_UserId, _Code) ->
 %% -rate + actual (pool of blocking workers) load regulation
 %% -identify caller (!!!)
 %% TODO: try ot build a scaffold with nakaz
+
+-ifdef(TEST).
+
+
+
+-endif.

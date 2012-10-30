@@ -20,6 +20,8 @@
 
 -record(herlon_conf,
         {defaults              :: #defaults{},
+         secret_size           :: 4..32,
+         secret_storage        :: external | internal,
          qr_pool_size          :: 1..50,
          oath_pool_size        :: 1..50,
          code_check_rate_limit :: 1..60 % per minute

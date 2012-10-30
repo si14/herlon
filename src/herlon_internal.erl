@@ -8,7 +8,8 @@
 
 %% API
 -export([start_link/0]).
--export([get_secret_qr/1, get_secret_qr/2, get_secret_qr/4,
+-export([get_secret_qr/0, get_secret_qr/1,
+         get_secret_qr/2, get_secret_qr/4,
          check_code/2]).
 
 %% nakaz callbacks
@@ -24,6 +25,11 @@
 
 %%% API
 
+get_secret_qr() ->
+    [{config, Conf}] = ets:lookup(herlon, config),
+    Secret = crypto:rand_bytes(Conf#herlon_conf.secret_size),
+    get_secret_qr(Secret).
+
 get_secret_qr(Secret) ->
     [{config, Conf}] = ets:lookup(herlon, config),
     D = Conf#herlon_conf.defaults,
@@ -38,11 +44,12 @@ get_secret_qr(Secret, Label) ->
 
 get_secret_qr(Secret, Label, TileSize, Margin) ->
     KeyUri = form_key_uri(Secret, Label),
-    poolboy:transaction(
-      qr_pool,
-      fun(Worker) ->
-              herlon_qr_worker:render(Worker, KeyUri, TileSize, Margin)
-      end).
+    Qr = poolboy:transaction(
+           qr_pool,
+           fun(Worker) ->
+                   herlon_qr_worker:render(Worker, KeyUri, TileSize, Margin)
+           end),
+    {ok, {Secret, Qr}}.
 
 check_code(Secret, Code) ->
     %% FIXME: rate limit
@@ -95,7 +102,7 @@ code_change(_OldVsn, State, _Extra) ->
 
 %%% Internal functions
 
-form_key_uri(Label, Secret) ->
+form_key_uri(Secret, Label) ->
     Base32Secret = base32:encode(Secret),
     IOList = io_lib:format("otpauth://totp/~s?secret=~s",
                            [Label, Base32Secret]),
