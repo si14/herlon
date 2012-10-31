@@ -12,7 +12,6 @@
 %% API
 -export([start/0,
          get_secret_qr/0, get_secret_qr/1,
-         get_secret_qr/2, get_secret_qr/4,
          check_code/2,
          add_user/1, check_user/2]).
 
@@ -43,23 +42,12 @@ start() ->
 
 -spec get_secret_qr() -> {ok, {binary(), binary()}}.
 get_secret_qr() ->
-    herlon_internal:get_secret_qr().
+    herlon_internal:get_secret_qr([]).
 
--spec get_secret_qr(binary()) -> {ok, {binary(),
-                                       binary()}}.
-get_secret_qr(Secret) ->
-    herlon_internal:get_secret_qr(Secret).
-
--spec get_secret_qr(binary(), binary()) -> {ok, {binary(),
-                                                 binary()}}.
-get_secret_qr(Secret, Label) ->
-    herlon_internal:get_secret_qr(Secret, Label).
-
--spec get_secret_qr(binary(), binary(),
-                    pos_integer(), pos_integer()) -> {ok, {binary(),
-                                                            binary()}}.
-get_secret_qr(Secret, Label, TileSize, Margin) ->
-    herlon_internal:get_secret_qr(Secret, Label, TileSize, Margin).
+-spec get_secret_qr([{atom(),
+                      binary() | integer()}]) -> {ok, {binary(), binary()}}.
+get_secret_qr(Params) ->
+    herlon_internal:get_secret_qr(Params).
 
 -spec check_code(binary(), pos_integer()) -> boolean().
 check_code(Secret, Code) -> % configure time window

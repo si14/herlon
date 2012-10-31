@@ -8,8 +8,7 @@
 
 %% API
 -export([start_link/0]).
--export([get_secret_qr/0, get_secret_qr/1,
-         get_secret_qr/2, get_secret_qr/4,
+-export([get_secret_qr/1,
          check_code/2]).
 
 %% nakaz callbacks
@@ -25,24 +24,28 @@
 
 %%% API
 
-get_secret_qr() ->
-    [{config, Conf}] = ets:lookup(herlon, config),
-    Secret = crypto:rand_bytes(Conf#herlon_conf.secret_size),
-    get_secret_qr(Secret).
-
-get_secret_qr(Secret) ->
+get_secret_qr(Params) ->
     [{config, Conf}] = ets:lookup(herlon, config),
     D = Conf#herlon_conf.defaults,
-    get_secret_qr(Secret, D#defaults.label,
-                  D#defaults.tile_size, D#defaults.margin).
+    Secret = case lists:keyfind(secret, 1, Params) of
+                 {secret, S} -> S;
+                 false       -> crypto:rand_bytes(Conf#herlon_conf.secret_size)
+             end,
+    Label = case lists:keyfind(label, 1, Params) of
+                {label, L} -> L;
+                false      -> D#defaults.label
+            end,
+    TileSize = case lists:keyfind(tile_size, 1, Params) of
+                   {tile_size, T} -> T;
+                   false          -> D#defaults.tile_size
+               end,
+    Margin = case lists:keyfind(margin, 1, Params) of
+                 {margin, M} -> M;
+                 false       -> D#defaults.margin
+             end,
+    get_secret_qr_full(Secret, Label, TileSize, Margin).
 
-get_secret_qr(Secret, Label) ->
-    [{config, Conf}] = ets:lookup(herlon, config),
-    D = Conf#herlon_conf.defaults,
-    get_secret_qr(Secret, Label,
-                  D#defaults.tile_size, D#defaults.margin).
-
-get_secret_qr(Secret, Label, TileSize, Margin) ->
+get_secret_qr_full(Secret, Label, TileSize, Margin) ->
     KeyUri = form_key_uri(Secret, Label),
     Qr = poolboy:transaction(
            qr_pool,
