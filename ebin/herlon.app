@@ -6,4 +6,5 @@
               {mod,{herlon,[]}},
               {env,[]},
               {modules,[herlon,herlon_internal,herlon_oath_worker,
-                        herlon_qr_worker,herlon_sup]}]}.
+                        herlon_qr_worker,herlon_rest_check,herlon_rest_get_qr,
+                        herlon_rest_qr,herlon_sup]}]}.

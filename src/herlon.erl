@@ -34,9 +34,12 @@ stop(_State) ->
 %% API
 
 start() ->
-    application:start(poolboy),
-    application:start(nakaz),
-    application:start(herlon).
+    ok = application:start(ranch),
+    ok = application:start(crypto),
+    ok = application:start(cowboy),
+    ok = application:start(poolboy),
+    ok = application:start(nakaz),
+    ok = application:start(herlon).
 
 %% if secret is stored on external server
 

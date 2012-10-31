@@ -20,7 +20,7 @@
 
 -define(SERVER, ?MODULE).
 
--record(state, {}).
+-record(state, {config :: #herlon_conf{}}).
 
 %%% API
 
@@ -79,12 +79,13 @@ init([]) ->
     Conf = ?NAKAZ_USE(#herlon_conf{}),
     ets:new(herlon, [protected, named_table, {read_concurrency, true}]),
     ets:insert(herlon, {config, Conf}),
-    {ok, #state{}}.
+    self() ! init,
+    {ok, #state{config=Conf}}.
 
 handle_call({load_config, Conf}, _From, State) ->
     %% FIXME: edit pool size on config reload
     ets:insert(herlon, {config, Conf}),
-    {reply, ok, State};
+    {reply, ok, State#state{config=Conf}};
 handle_call(Request, _From, State) ->
     ?WARNING("Got unhandled call: ~p", [Request]),
     {reply, ok, State}.
@@ -93,6 +94,14 @@ handle_cast(Msg, State) ->
     ?WARNING("Got unhandled cast: ~p", [Msg]),
     {noreply, State}.
 
+handle_info(init, #state{config=C}=State) ->
+    Dispatch = [{'_', [{[<<"qr">>], herlon_rest_qr, []},
+                       {[<<"check">>], herlon_rest_check, []}]}],
+    {ok, _HttpPid} = cowboy:start_http(http, 100,
+                                       [{port, C#herlon_conf.port},
+                                        {ip, C#herlon_conf.ip}],
+                                       [{dispatch, Dispatch}]),
+    {noreply, State};
 handle_info(Info, State) ->
     ?WARNING("Got unhandled info: ~p", [Info]),
     {noreply, State}.

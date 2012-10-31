@@ -24,5 +24,7 @@
          secret_storage        :: external | internal,
          qr_pool_size          :: 1..50,
          oath_pool_size        :: 1..50,
-         code_check_rate_limit :: 1..60 % per minute
+         code_check_rate_limit :: 1..60, % per minute
+         port                  :: 1..9000,
+         ip                    :: inet:ip_address()
         }).
