@@ -95,8 +95,21 @@ handle_cast(Msg, State) ->
     {noreply, State}.
 
 handle_info(init, #state{config=C}=State) ->
-    Dispatch = [{'_', [{[<<"qr">>], herlon_rest_qr, []},
-                       {[<<"check">>], herlon_rest_check, []}]}],
+    ExternalDispatch = [{[<<"qr">>], herlon_rest_qr, []},
+                        {[<<"check">>], herlon_rest_check, []}],
+    InternalDispatch = [],
+    DemoDispatch =
+        case C#herlon_conf.demo_page of
+            true  -> [{[<<"demo">>, '...'], cowboy_static,
+                       [{directory, {priv_dir, herlon, [<<"demo">>]}},
+                        {mimetypes, {fun mimetypes:path_to_mimes/2,
+                                     default}}]}];
+            false -> []
+        end,
+    Dispatch = [{'_', case C#herlon_conf.secret_storage of
+                          external -> ExternalDispatch ++ DemoDispatch;
+                          internal -> InternalDispatch ++ DemoDispatch
+                      end}],
     {ok, _HttpPid} = cowboy:start_http(http, 100,
                                        [{port, C#herlon_conf.port},
                                         {ip, C#herlon_conf.ip}],
